@@ -1,0 +1,6 @@
+# Simulation output and local copies of the container image
+*.sif
+processor*/
+processors*/
+*.tar.gz
+__pycache__/

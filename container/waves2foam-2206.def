@@ -1,0 +1,51 @@
+Bootstrap: docker
+From: opencfd/openfoam-dev:2206
+
+# OpenFOAM v2206 (ESI) + waves2Foam r2157
+# Build:  apptainer build waves2foam-2206.sif waves2foam-2206.def
+# Use:    apptainer exec waves2foam-2206.sif bash -c "source /opt/foam-env.sh && waveFoam -help"
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y --no-install-recommends \
+        subversion git ca-certificates make gfortran libgsl-dev
+    rm -rf /var/lib/apt/lists/*
+
+    # Environment script: OpenFOAM + waves2Foam binaries/libraries
+    cat > /opt/foam-env.sh <<'EOF'
+source /usr/lib/openfoam/openfoam2206/etc/bashrc
+export WAVES_DIR=/opt/waves2Foam
+export WAVES_APPBIN=$WAVES_DIR/platform/bin
+export WAVES_LIBBIN=$WAVES_DIR/platform/lib
+export PATH=$WAVES_APPBIN:$PATH
+export LD_LIBRARY_PATH=$WAVES_LIBBIN:$LD_LIBRARY_PATH
+EOF
+
+    svn checkout -q -r 2157 \
+        https://svn.code.sf.net/p/openfoam-extend/svn/trunk/Breeder_1.6/other/waves2Foam \
+        /opt/waves2Foam
+
+    cd /opt/waves2Foam
+    cp bin/bashrc.org bin/bashrc
+    sed -i \
+        -e 's|^export WAVES_DIR=.*|export WAVES_DIR=/opt/waves2Foam|' \
+        -e 's|^export WAVES_APPBIN=.*|export WAVES_APPBIN=/opt/waves2Foam/platform/bin|' \
+        -e 's|^export WAVES_LIBBIN=.*|export WAVES_LIBBIN=/opt/waves2Foam/platform/lib|' \
+        -e 's|^export WAVES_GSL_LIB=.*|export WAVES_GSL_LIB=/usr/lib/x86_64-linux-gnu|' \
+        bin/bashrc
+    chmod +x bin/bashrc
+
+    # Compile (OpenFOAM's bashrc must be sourced in bash, not sh)
+    bash -c 'source /opt/foam-env.sh && export WM_NCOMPILEPROCS=$(nproc) && ./Allwmake' 2>&1 | tee /opt/waves2Foam/build.log
+
+    # Fail the build if the main pieces are missing
+    for f in platform/bin/waveFoam platform/bin/setWaveParameters platform/bin/setWaveField \
+             platform/bin/waveGaugesNProbes platform/lib/libwaves2Foam.so; do
+        [ -e "$f" ] || { echo "BUILD FAILED: missing $f (see /opt/waves2Foam/build.log)"; exit 1; }
+    done
+    chmod -R a+rX /opt/waves2Foam
+
+%labels
+    OpenFOAM v2206
+    waves2Foam r2157
