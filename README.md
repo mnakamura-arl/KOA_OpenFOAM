@@ -1,4 +1,4 @@
-# OpenFOAM + waves2Foam on UH Koa
+# OpenFOAM + waves2Foam on UH KOA
 
 Run [waves2Foam](https://openfoamwiki.net/index.php/Contrib/waves2Foam) wave-flume simulations on the
 University of Hawaiʻi **Koa** HPC cluster, using a ready-made Apptainer container.
