@@ -6,8 +6,6 @@ There's nothing to compile.
 
 - **Container:** OpenFOAM v2206 (ESI/openfoam.com) + waves2Foam r2157, published at
   [`ghcr.io/mnakamura-arl/waves2foam`](https://github.com/users/mnakamura-arl/packages/container/package/waves2foam)
-- **Tested with:** a 2-D, 1.16 M-cell dual-plate breakwater case (`T0.8`). The results match
-  the lab workstation's, and the incident wave amplitude is within 0.1% of the target.
 
 ## Quick start
 
@@ -50,14 +48,3 @@ scripts/compare_runs.py       compare two runs field by field (e.g. to verify a 
 postprocessing/               headless ParaView setup, video rendering, wave-gauge analysis (plot_ws3.py)
 container/                    Apptainer recipe and Koa build job for the image
 ```
-
-## Typical timing (T0.8 case, 1.16 M cells, 40 s simulated, 24 cores on Koa)
-
-| Step | Time |
-|---|---|
-| Solver (waveFoam) | 4.6 h |
-| Reconstruct (24-way parallel) | about 3.5 h |
-| Lab workstation, 128 cores, solver only | about 2 h |
-
-Koa is slower per run than the 128-core workstation, but it can run many cases **at the same time**,
-so it's best for sweeps. See [3. Multiple runs](docs/3-multiple-runs.md).
