@@ -32,6 +32,7 @@ dt = 1 / 40
 T = 0.8      # wave period
 h = 0.625    # water depth
 
+# structure dimensions, only used for the b/L and d/L outputs
 b = 0.3      # plate spacing
 d = 0.1      # plate draft
 

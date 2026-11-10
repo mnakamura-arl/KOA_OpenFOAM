@@ -9,8 +9,8 @@
 # Build the waves2Foam (OpenFOAM v2206) Apptainer image on Koa. Only needed to change the image;
 # normally just pull the published one (see docs/5-building-the-image.md).
 #
-# Apptainer's cache and temp folders go on node-local /tmp. With them on Lustre the image unpack
-# crawled (>2 h without finishing); on /tmp the same base image unpacks in ~35 s. The .sif is built
+# Apptainer's cache and temp folders go on node-local /tmp: unpacking the image on Lustre takes
+# hours, while on /tmp it takes under a minute. The .sif is built
 # on /tmp and copied to scratch at the end, so Lustre only sees one large sequential write.
 #
 # Submit from the folder holding waves2foam-2206.def:   sbatch build_image.slurm

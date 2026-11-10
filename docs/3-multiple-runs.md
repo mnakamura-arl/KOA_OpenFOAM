@@ -1,12 +1,7 @@
 # 3. Multiple runs
 
-Koa's advantage over a single big workstation is running many cases at the same time. Ten 24-core
-jobs running side by side finish in about the time one job takes.
-
-| | 10 cases |
-|---|---|
-| 128-core workstation, one after another | about 20 h |
-| Koa, 10 × 24-core jobs at once (if the queue allows) | about 8 h |
+Each job runs on one node, but you can run many jobs at once. For a set of cases, submit them
+together rather than one after another.
 
 ## Option A: a parameter sweep with `make_sweep.sh` + a job array
 
@@ -15,31 +10,33 @@ jobs running side by side finish in about the time one job takes.
 
 ```bash
 cd ~/koa_scratch/openfoam
-KOA_OpenFOAM/scripts/make_sweep.sh T0.8_input sweep_H9mm 0.8 1.0 1.2 1.4 1.6
+KOA_OpenFOAM/scripts/make_sweep.sh MyTemplate sweep_A 0.8 1.0 1.2 1.4 1.6
 ```
 
-For each period it creates `sweep_H9mm/T<period>/` with:
+For each period, it creates `sweep_A/T<period>/` with:
 - `period` set in `constant/waveProperties.input`
 - `writeFormat binary;` in `system/controlDict`
 - the same mesh as the template (no rebuild)
 - a `.init_waves` marker, so the job reruns `setWaveParameters` + `setWaveField` before solving
 - no old results or logs
 
-To change the wave height for the whole sweep too, set `HEIGHT`:
+The template needs `constant/` (with the mesh and `waveProperties.input`), `system/` and `0.org/`.
+
+To set the wave height for the whole sweep too, set `HEIGHT` (in metres):
 
 ```bash
-HEIGHT=0.012 KOA_OpenFOAM/scripts/make_sweep.sh T0.8_input sweep_H12mm 0.8 1.0 1.2
+HEIGHT=0.012 KOA_OpenFOAM/scripts/make_sweep.sh MyTemplate sweep_B 0.8 1.0 1.2
 ```
 
 Then submit all the cases as one **job array**:
 
 ```bash
-cd sweep_H9mm
+cd sweep_A
 sbatch --array=0-4 ../KOA_OpenFOAM/slurm/run_case.slurm       # 5 cases, all at once
 sbatch --array=0-4%2 ../KOA_OpenFOAM/slurm/run_case.slurm     # 5 cases, at most 2 running at a time
 ```
 
-Array task `i` runs the case on line `i+1` of `cases.txt`. Watch them all:
+Array task `i` runs the case on line `i+1` of `cases.txt`. To watch them all:
 
 ```bash
 squeue -u $USER                                  # array tasks show as <jobid>_<index>
@@ -47,20 +44,17 @@ squeue -u $USER                                  # array tasks show as <jobid>_<
 ```
 
 **Before a sweep, check:**
-- **Relaxation zones:** the inlet (x = 0–4 m) and outlet (16–20 m) zones should be at least about one
-  wavelength long. Longer periods mean longer waves. In 0.625 m of water:
-
-  | T (s) | 0.8 | 1.0 | 1.2 | 1.4 | 1.6 |
-  |---|---|---|---|---|---|
-  | L (m) | 1.00 | 1.54 | 2.14 | 2.73 | 3.31 |
+- **Relaxation zones:** the inlet and outlet relaxation zones should be at least about one wavelength
+  long. Longer periods give longer waves. Solve the dispersion relation for the longest period in
+  your sweep. `plot_ws3.py` prints L/4 for each case, for reference.
 - **Mesh resolution:** shorter or steeper waves need more cells per wavelength and per wave height.
-- **`Tsoft`** (ramp-up time) in `waveProperties.input` stays as in the template. Scale it with the
+- **`Tsoft`** (ramp-up time) in `waveProperties.input` is copied from the template. Scale it with the
   period if you want the same number of ramp-up waves.
-- **Analysis window:** `plot_ws3.py` analyses 4 periods starting at t = 30 s, so `endTime` must be
-  at least 30 + 4T.
+- **`endTime`** must be long enough for the waves to reach steady state, plus your analysis window,
+  at the longest period.
 
 To vary something other than period or height, edit the generated cases before submitting (for
-example with `sed` or `foamDictionary`), or copy `make_sweep.sh` and change the `sed` lines.
+example with `sed` or `foamDictionary`), or copy `make_sweep.sh` and change its `sed` lines.
 
 ## Option B: your own list of cases
 
@@ -75,7 +69,7 @@ sbatch --array=0-2 --export=ALL,CASE_LIST=my_cases.txt KOA_OpenFOAM/slurm/run_ca
 
 ## Option C: separate jobs
 
-Submitting each case on its own also works:
+You can also submit each case on its own:
 
 ```bash
 for c in CaseA CaseB CaseC; do (cd $c && sbatch ../KOA_OpenFOAM/slurm/run_case.slurm); done
@@ -83,8 +77,8 @@ for c in CaseA CaseB CaseC; do (cd $c && sbatch ../KOA_OpenFOAM/slurm/run_case.s
 
 ## Chaining jobs with dependencies
 
-To start a job only after another one ends (whether it finished or failed), use `afterany`. To
-start only after a success, use `afterok`.
+To start a job only after another one ends (whether it finished or failed), use `afterany`. To start
+only after a success, use `afterok`.
 
 ```bash
 sbatch --dependency=afterany:<jobid> --export=ALL,RECON_ONLY=1 ../KOA_OpenFOAM/slurm/run_case.slurm
@@ -97,6 +91,6 @@ finds nothing left to merge and exits quickly.
 ## Being a good neighbour
 
 - **Use `%N` on large arrays** to limit how many run at once (e.g. `--array=0-49%10`).
-- **Delete `processors24/`** after a successful merge. It's a full second copy of the results.
-- **`kill-shared`** has many idle cores but jobs can be killed. Only use it with `writeInterval` set,
-  so a killed run can restart.
+- **Delete `processors<N>/`** after a successful merge. It's a full second copy of the results.
+- **`kill-shared`** has many idle cores, but jobs there can be killed. Only use it with
+  `writeInterval` set, so a killed run can restart (`RESTART=1`).

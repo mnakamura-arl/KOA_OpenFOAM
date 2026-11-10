@@ -2,10 +2,11 @@
 # Render a case's alpha.water field to an MP4 with headless ParaView (no display or GPU needed).
 # Run setup_paraview_linux.sh once first.
 #
-# Usage:  postprocessing/make_video.sh <case_dir> [full|plates] [stride] [nparts]
-#   full    whole flume, vertical scale x20 (default)
-#   plates  close-up of the plates, vertical scale x4 (edit VIEWS in render_frames.py for other geometry)
-#   stride  use every Nth output time (default 1; output every 0.025 s -> 40 fps = real time)
+# Usage:  postprocessing/make_video.sh <case_dir> [full|zoom] [stride] [nparts]
+#   full    whole domain, vertical scale x20 (default)
+#   zoom    close-up of a region, vertical scale x4 (set its x range in VIEWS in render_frames.py)
+#   stride  use every Nth output time (default 1). Video plays at 40/stride frames per second
+#           (real time when fields are written every 0.025 s; set FPS=... to override)
 #   nparts  number of pvbatch copies to run at once (default 4; each needs ~2 GB RAM)
 #
 # Output: <case_dir>/videos/<case>_<view>.mp4
@@ -29,7 +30,7 @@ if [ -z "$FOAM" ]; then
 fi
 
 FRAMES=$CASE/videos/frames_$VIEW
-FPS=$((40 / STRIDE))
+FPS=${FPS:-$((40 / STRIDE))}
 mkdir -p "$FRAMES"
 rm -f "$FRAMES"/frame_*.png
 

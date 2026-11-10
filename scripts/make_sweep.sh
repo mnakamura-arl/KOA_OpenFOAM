@@ -7,8 +7,8 @@
 #     HEIGHT=0.012 scripts/make_sweep.sh <template_case> <sweep_dir> 0.8 1.0 1.2
 #
 # Example:
-#     scripts/make_sweep.sh T0.8_input sweep_H9mm 0.8 1.0 1.2 1.4
-#     cd sweep_H9mm && sbatch --array=0-3 ../KOA_OpenFOAM/slurm/run_case.slurm
+#     scripts/make_sweep.sh MyTemplate sweep_A 0.8 1.0 1.2 1.4
+#     cd sweep_A && sbatch --array=0-3 ../KOA_OpenFOAM/slurm/run_case.slurm
 #
 # Each new case is named T<period> and gets:
 #   - period (and height, if HEIGHT is set) changed in constant/waveProperties.input

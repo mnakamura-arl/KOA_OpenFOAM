@@ -3,7 +3,7 @@
 #
 # Usage:
 #     scripts/status.sh                 # the case in the current folder
-#     scripts/status.sh T0.8 T1.0       # specific case folders
+#     scripts/status.sh CaseA CaseB     # specific case folders
 #     scripts/status.sh $(cat cases.txt)  # every case in a sweep (run from the sweep folder)
 
 [ $# -eq 0 ] && set -- .

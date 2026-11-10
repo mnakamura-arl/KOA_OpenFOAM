@@ -24,8 +24,8 @@ tail -f build_image-<jobid>.out
 ```
 
 This takes 20–40 minutes and produces `waves2foam-2206.sif` (374 MB). The job keeps Apptainer's
-cache and temp files on the node's local `/tmp`. Building on Lustre scratch was so slow it didn't
-finish in 2 hours.
+cache and temp files on the node's local `/tmp`, because unpacking the image on Lustre scratch is
+extremely slow.
 
 The compile prints many `warning:` lines (deprecated APIs, unused variables). They're harmless. A
 real failure shows `error:` or `BUILD FAILED`.

@@ -31,7 +31,7 @@ exit                                                          # back to the logi
 |---|---|
 | `~` (home) | Small quota. Keep scripts here, not results. |
 | `~/koa_scratch` | Large and fast. **Run all cases here.** Files are purged after a period of inactivity, so copy results off. |
-| Group storage (e.g. `~/nslab_storage_group`) | Shared with your group. Good for a shared copy of the container. |
+| Group storage (if your group has it) | Shared with your group. Good for a shared copy of the container. |
 
 Everything in these docs assumes the working folder is `~/koa_scratch/openfoam`.
 
@@ -95,7 +95,7 @@ to [run a case](2-running-a-case.md).
 | `scancel <jobid>` | Cancel a job |
 | `sinfo -o "%15P %20C %10l"` | Partitions: CPUs allocated/idle/other/total, and time limits |
 
-The partitions we use:
+Partitions most useful for these runs (check current limits with `sinfo`):
 
 | Partition | Time limit | Notes |
 |---|---|---|

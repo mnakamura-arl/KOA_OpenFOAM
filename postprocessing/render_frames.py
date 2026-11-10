@@ -1,10 +1,10 @@
-# Render alpha.water frames of the T0.8 wave case with headless ParaView.
+# Render alpha.water frames of a 2-D waves2Foam case with headless ParaView.
 #
 # Usage:
-#   pvbatch render_frames.py <case.foam> <outdir> [--view full|plates] [--stride N] [--part I --nparts N]
+#   pvbatch render_frames.py <case.foam> <outdir> [--view full|zoom] [--stride N] [--part I --nparts N]
 #
-# --view full    whole flume, vertical scale x20 (default)
-# --view plates  close-up of the two plates, vertical scale x4
+# --view full    whole domain, vertical scale x20 (default)
+# --view zoom    close-up of a region (set its x range in VIEWS), vertical scale x4
 # --stride N     render every Nth output time (default 1)
 # --part/--nparts  render only frames where index % nparts == part (for running several copies at once)
 
@@ -14,10 +14,12 @@ import re
 
 from paraview.simple import *
 
+# Edit these for your geometry: x range shown [m], vertical centre of the view [m] (before
+# exaggeration), vertical exaggeration, and image size [px]. "full" uses the mesh's x extent when
+# x is None. The still-water level is y = 0 and y points up.
 VIEWS = {
-    # x range shown, y centre, vertical exaggeration, image size
-    "full":   dict(x=(0.0, 20.0), yc=-0.045, scale=20.0, size=(1920, 480)),
-    "plates": dict(x=(9.4, 10.9), yc=-0.045, scale=4.0, size=(1920, 1080)),
+    "full": dict(x=None, yc=-0.045, scale=20.0, size=(1920, 480)),
+    "zoom": dict(x=(9.4, 10.9), yc=-0.045, scale=4.0, size=(1920, 1080)),
 }
 
 p = argparse.ArgumentParser()
@@ -40,7 +42,10 @@ foam.Createcelltopointfiltereddata = 1
 foam.UpdatePipelineInformation()
 times = list(foam.TimestepValues)[::args.stride]
 foam.UpdatePipeline(times[0])
-zmin, zmax = foam.GetDataInformation().GetBounds()[4:6]
+bounds = foam.GetDataInformation().GetBounds()
+zmin, zmax = bounds[4:6]
+if v["x"] is None:
+    v["x"] = (bounds[0], bounds[1])
 zmid = 0.5 * (zmin + zmax)
 
 # The case is 2-D (one cell thick in z): cut through the middle, then stretch vertically
@@ -56,7 +61,7 @@ view = CreateView("RenderView")
 view.ViewSize = list(v["size"])
 view.OrientationAxesVisibility = 0
 view.UseColorPaletteForBackground = 0
-view.Background = [0.15, 0.15, 0.17]   # plates are holes in the mesh, so they show as this colour
+view.Background = [0.15, 0.15, 0.17]   # solid structures are holes in the mesh, so they show as this colour
 
 water = Show(stretched, view)
 ColorBy(water, ("CELLS", "alpha.water"))
@@ -76,7 +81,7 @@ line.LineWidth = 2.0
 label = Text()
 label_disp = Show(label, view)
 label_disp.WindowLocation = "Upper Left Corner"
-label_disp.FontSize = 22 if args.view == "full" else 30
+label_disp.FontSize = 22 if v["size"][1] < 700 else 30
 label_disp.Color = [1.0, 1.0, 1.0]
 
 # Camera: looking along -z with parallel projection, framed on the chosen x range

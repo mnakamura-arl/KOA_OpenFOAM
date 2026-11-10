@@ -30,11 +30,11 @@ cd ~/koa_scratch/openfoam/MyCase && sbatch ../KOA_OpenFOAM/slurm/run_case.slurm
 | | |
 |---|---|
 | [1. Getting started](docs/1-getting-started.md) | Koa account, logging in, storage, getting the container, smoke test |
-| [2. Running a case](docs/2-running-a-case.md) | Preparing a case, submitting, monitoring, restarting, timing |
+| [2. Running a case](docs/2-running-a-case.md) | Preparing a case, submitting, monitoring, restarting |
 | [3. Multiple runs](docs/3-multiple-runs.md) | Parameter sweeps with job arrays, dependent jobs |
 | [4. Post-processing](docs/4-post-processing.md) | Copying results back, ParaView, wave-gauge analysis, videos |
 | [5. Building the image](docs/5-building-the-image.md) | Rebuilding or updating the container, publishing it |
-| [Troubleshooting](docs/troubleshooting.md) | Problems we hit and how to fix them |
+| [Troubleshooting](docs/troubleshooting.md) | Common problems and how to fix them |
 
 ## What's in this repo
 
