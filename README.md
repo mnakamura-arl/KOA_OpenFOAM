@@ -14,7 +14,7 @@ There's nothing to compile.
 srun -p sandbox -c 2 --mem=4G -t 0:30:00 --pty /bin/bash
 mkdir -p ~/koa_scratch/openfoam && cd ~/koa_scratch/openfoam
 apptainer pull waves2foam-2206.sif oras://ghcr.io/mnakamura-arl/waves2foam:v2206-r2157
-git clone <this-repo-url> KOA_OpenFOAM        # or copy this folder over with scp
+git clone git@github.com:mnakamura-arl/KOA_OpenFOAM.git KOA_OpenFOAM        # or copy this folder over with scp
 exit
 
 # 2. Back on the login node: smoke test (about 1 minute)
